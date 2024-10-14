@@ -9,22 +9,29 @@ import { eq } from "drizzle-orm";
 import { useRouter } from "next/navigation";
 
 function DashboardLayout({ children }) {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
+
   useEffect(() => {
-    user && checkUserBudgets();
-  }, [user]);
+    if (user && isLoaded) {
+      checkUserBudgets();
+    }
+  }, [user, isLoaded]);
 
   const checkUserBudgets = async () => {
     const result = await db
       .select()
       .from(Budgets)
       .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress));
+
     console.log(result);
-    if (result?.length == 0) {
+    if (result?.length === 0) {
       router.replace("/dashboard/budgets");
     }
   };
+
+  if (!isLoaded) return <div>Loading...</div>;
+
   return (
     <div>
       <div className="fixed md:w-64 hidden md:block ">
@@ -37,5 +44,6 @@ function DashboardLayout({ children }) {
     </div>
   );
 }
+
 
 export default DashboardLayout;
